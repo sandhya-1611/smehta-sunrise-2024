@@ -1,21 +1,6 @@
 import { useEffect, useState } from "react";
 import Task from "@/model/Task";
 import { initializeTasks, getActiveTasks, getCompletedTasks, getAllTasks, completeTask, deleteTask, updateTask, createTask } from "@/modules/taskManager";
-import {
-  Container,
-  Box,
-  Typography,
-  Button,
-  Card,
-  CardContent,
-  TextField,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Badge,
-  Grid
-} from '@mui/material';
 
 export default function Home() {
   const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
@@ -23,6 +8,8 @@ export default function Home() {
   const [toDoTasks, setToDoTasks] = useState<Task[]>([]);
   const [isUpdateModalVisible, setIsUpdateModalVisible] = useState(false);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+  const [isModalOpen,setIsModalOpen] = useState<Boolean>(false);
+
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [form, setForm] = useState({
     title: "",
@@ -60,6 +47,7 @@ export default function Home() {
       persona: task.persona,
       group: task.group.toString()
     });
+    setIsModalOpen(true);
     setIsUpdateModalVisible(true);
   };
 
@@ -77,13 +65,20 @@ export default function Home() {
         persona: form.persona,
         group: group
       });
+      setIsModalOpen(false);
       setIsUpdateModalVisible(false);
       updateTasks();
     }
   };
 
   const handleCancelUpdate = () => {
+    setIsModalOpen(false);
+    if(isUpdateModalVisible){
     setIsUpdateModalVisible(false);
+    }
+    else{
+      setIsCreateModalVisible(false);
+    }
   };
 
   const handleShowCreateModal = () => {
@@ -93,6 +88,7 @@ export default function Home() {
       persona: "",
       group: ""
     });
+    setIsModalOpen(true);
     setIsCreateModalVisible(true);
   };
 
@@ -104,257 +100,180 @@ export default function Home() {
     }
 
     createTask(form.title, form.description, form.persona, group);
+    setIsModalOpen(false);
     setIsCreateModalVisible(false);
     updateTasks();
   };
 
-  const handleCancelCreate = () => {
-    setIsCreateModalVisible(false);
-  };
-
   return (
-    <Container maxWidth="lg" >
-      <Box sx={{ bgcolor: 'lavender', minHeight: '100vh' ,width:'100%'}}>
-        <Box sx={{ bgcolor: 'lavender', p: 4, textAlign: 'center' }}>
-          <Typography variant="h4" component="h1" sx={{ color: 'black', fontWeight: 'bold' }}>
-            Taskboard
-          </Typography>
-          <Button
-            variant="contained"
-            color="success"
-            sx={{ mt: 2 }}
+    <div className="min-h-screen bg-purple-100">
+      <header className="bg-lavender p-6 text-center ">
+        <h1 className="text-black text-4xl font-bold">Taskboard</h1>
+          <button
+            className="mt-4 bg-green-400 text-white py-3 px-6 text-lg font-bold rounded-xl hover:bg-green-600"
             onClick={handleShowCreateModal}
           >
             Create Task
-          </Button>
-        </Box>
-        <Grid container spacing={2} sx={{ p: 4 }}>
-          <Grid item xs={12} md={4}>
-            <Box sx={{ bgcolor: '#E8F7F4', p: 2, borderRadius: 2, boxShadow: 3 }}>
-              <Typography variant="h6" component="h2" sx={{ mb: 2, color: 'black' }}>
-                To Do
-                <Badge sx={{ ml: 2, mt: 1.5}}badgeContent={toDoTasks.length} color="error">
-                <Typography variant="body2" sx={{ mb: 2, color: 'black' }}>
-                </Typography>
-              </Badge>
-              </Typography>
-              
-              {toDoTasks.map(task => (
-                <Card key={task.id} sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Typography variant="h6" component="h3" sx={{ color: 'black' }}>
-                      Task {task.id}: {task.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 2, color: 'black' }}>
-                      {task.description}
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={() => handleDeleteTask(task.id)}
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleShowUpdateModal(task)}
-                      >
-                        Update
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </Grid>
-          <Grid  item xs={12} md={4} >
-          <Box sx={{ bgcolor: '#E8F7F4', p: 2, borderRadius: 2, boxShadow: 3 }}>
+          </button>
+      </header>
+      <main className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <section className="bg-[#E8F7F4] p-4 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-2 text-black">To Do</h2>
+            <div className="flex items-center mb-4">
+              <span className="bg-red-500 text-white py-1 px-2 rounded-full text-xs font-bold">{toDoTasks.length}</span>
+            </div>
+            {toDoTasks.map(task => (
+              <div key={task.id} className="bg-white p-4 mb-4 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-black">Task {task.id}: {task.title}</h3>
+                <p className="mb-4 text-black">{task.description}</p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    className="bg-gray-300 text-black py-2 px-4 rounded-lg hover:bg-gray-400"
+                    onClick={() => handleCompleteTask(task.title)}
+                  >
+                    Done
+                  </button>
+                  <button
+                    className="bg-red-400 text-white py-2 px-4 rounded-lg hover:bg-red-600"
+                    onClick={() => handleDeleteTask(task.id)}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="bg-blue-400 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                    onClick={() => handleShowUpdateModal(task)}
+                  >
+                    Update
+                  </button>
+                </div>
+              </div>
+            ))}
+          </section>
+          <section className="bg-[#E8F7F4] p-4 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-2 text-black">In Progress</h2>
+            <div className="flex items-center mb-4">
+              <span className="bg-blue-500 text-white py-1 px-2 rounded-full text-xs font-bold">{inProgressTasks.length}</span>
+            </div>
+            {inProgressTasks.map(task => (
+              <div key={task.id} className="bg-white p-4 mb-4 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-black">Task {task.id}: {task.title}</h3>
+                <p className="mb-4 text-black">{task.description}</p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    className="bg-blue-400 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                    onClick={() => handleCompleteTask(task.title)}
+                  >
+                    Done
+                  </button>
+                  <button
+                    className="bg-red-400 text-white py-2 px-4 rounded-lg hover:bg-red-600"
+                    onClick={() => handleDeleteTask(task.id)}
+                  >
+                    Delete
+                  </button>
+                  <button
+                    className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                    onClick={() => handleShowUpdateModal(task)}
+                  >
+                    Update
+                  </button>
+                </div>
+              </div>
+            ))}
+          </section>
+          <section className="bg-[#E8F7F4] p-4 rounded-lg shadow-lg">
+            <h2 className="text-xl font-semibold mb-2 text-black">Completed</h2>
+            <div className="flex items-center mb-4">
+              <span className="bg-green-500 text-white py-1 px-2 rounded-full text-xs font-bold">{completedTasks.length}</span>
+            </div>
+            {completedTasks.map(task => (
+              <div key={task.id} className="bg-white p-4 mb-4 rounded-lg shadow">
+                <h3 className="text-lg font-semibold text-black">Task {task.id}: {task.title}</h3>
+                <p className="mb-4 text-black">{task.description}</p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    className="bg-red-400 text-white py-2 px-4 rounded-lg hover:bg-red-600"
+                    onClick={() => handleDeleteTask(task.id)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </section>
+        </div>
+      </main>
 
-              <Typography variant="h6" component="h2" sx={{ mb: 2, color: 'black' }}>
-                In Progress
-                <Badge sx={{ mt: -0.5, ml:2}} badgeContent={inProgressTasks.length} color="primary">
-              </Badge>
-              </Typography>
-              
-              {inProgressTasks.map(task => (
-                <Card key={task.id} sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Typography variant="h6" component="h3" sx={{ color: 'black' }}>
-                      Task {task.id}: {task.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 2, color: 'black' }}>
-                      {task.description}
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleCompleteTask(task.title)}
-                      >
-                        Done
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={() => handleDeleteTask(task.id)}
-                      >
-                        Delete
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={() => handleShowUpdateModal(task)}
-                      >
-                        Update
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box sx={{ bgcolor: '#E8F7F4', p: 2, borderRadius: 2, boxShadow: 3 }}>
-              <Typography variant="h6" component="h2" sx={{ mb: 2, color: 'black' }}>
-                Completed
-                <Badge sx={{ mt: -0.5, ml:2}} badgeContent={completedTasks.length} color="success">
-              </Badge>
-              </Typography>
-              
-              {completedTasks.map(task => (
-                <Card key={task.id} sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Typography variant="h6" component="h3" sx={{ color: 'black' }}>
-                      Task {task.id}: {task.title}
-                    </Typography>
-                    <Typography variant="body2" sx={{ mb: 2, color: 'black' }}>
-                      {task.description}
-                    </Typography>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                      <Button
-                        variant="contained"
-                        color="error"
-                        onClick={() => handleDeleteTask(task.id)}
-                      >
-                        Delete
-                      </Button>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
-            </Box>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Update Task Modal */}
-      <Dialog open={isUpdateModalVisible} onClose={handleCancelUpdate}>
-        <DialogTitle>Update Task</DialogTitle>
-        <DialogContent>
-          <form onSubmit={(e) => { e.preventDefault(); handleUpdateTask(); }}>
-            <TextField
-              label="Title"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              fullWidth
-              margin="normal"
-              required
-            />
-                        <TextField
-              label="Description"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              fullWidth
-              margin="normal"
-              multiline
-              rows={4}
-              required
-            />
-            <TextField
-              label="Persona"
-              value={form.persona}
-              onChange={(e) => setForm({ ...form, persona: e.target.value })}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Group"
-              type="number"
-              value={form.group}
-              onChange={(e) => setForm({ ...form, group: e.target.value })}
-              fullWidth
-              margin="normal"
-              required
-            />
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelUpdate} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleUpdateTask} color="primary">
-            Update
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Create Task Modal */}
-      <Dialog open={isCreateModalVisible} onClose={handleCancelCreate}>
-        <DialogTitle>Create Task</DialogTitle>
-        <DialogContent>
-          <form onSubmit={(e) => { e.preventDefault(); handleCreateTask(); }}>
-            <TextField
-              label="Title"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Description"
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              fullWidth
-              margin="normal"
-              multiline
-              rows={4}
-              required
-            />
-            <TextField
-              label="Persona"
-              value={form.persona}
-              onChange={(e) => setForm({ ...form, persona: e.target.value })}
-              fullWidth
-              margin="normal"
-              required
-            />
-            <TextField
-              label="Group"
-              type="number"
-              value={form.group}
-              onChange={(e) => setForm({ ...form, group: e.target.value })}
-              fullWidth
-              margin="normal"
-              required
-            />
-          </form>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelCreate} color="primary">
-            Cancel
-          </Button>
-          <Button onClick={handleCreateTask} color="primary">
-            Create
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </Container>
+      {isModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-xl font-semibold mb-4 text-black">{isUpdateModalVisible ?  "Update Task" : "Create Task"}</h2>
+            <form onSubmit={isUpdateModalVisible ? handleUpdateTask : handleCreateTask}>
+              <div className="mb-4">
+                <label htmlFor="title" className="block text-sm font-medium text-black">Title</label>
+                <input
+                  type="text"
+                  id="title"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="description" className="block text-sm font-medium text-black">Description</label>
+                <textarea
+                  id="description"
+                  value={form.description}
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="persona" className="block text-sm font-medium text-black">Persona</label>
+                <input
+                  type="text"
+                  id="persona"
+                  value={form.persona}
+                  onChange={(e) => setForm({ ...form, persona: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label htmlFor="group" className="block text-sm font-medium text-black">Group</label>
+                <input
+                  type="number"
+                  id="group"
+                  value={form.group}
+                  onChange={(e) => setForm({ ...form, group: e.target.value })}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50"
+                  required
+                />
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={handleCancelUpdate}
+                  className="bg-gray-300 text-black py-2 px-4 rounded-lg hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600"
+                >
+                  {isUpdateModalVisible ? "Update" : "Create"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 
-             
 
